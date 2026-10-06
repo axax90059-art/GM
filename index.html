@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- 內部預覽中：禁止搜尋引擎收錄。正式公開時刪除下面這一行 -->
+  <meta name="robots" content="noindex, nofollow, noarchive, noimageindex" />
+  <title>FIH | E/EA Solutions – From Design to Drive</title>
+  <meta name="description" content="FIH Automotive Electronics – E/EA Solutions showcase: TCU, ZCU, ADAS, IVI, HPC and more." />
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/fonts.css" /><!-- 本機字型，離線可用 -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="intro-on">
+  <!-- 開場動畫：播橫版影片；手機上方下方用同支影片的模糊放大版填滿；播完或按 Skip 後淡出進入網站 -->
+  <div class="intro" id="intro">
+    <canvas id="introBg" class="intro-bg" width="64" height="36" aria-hidden="true"></canvas>
+    <video id="introVideo" src="assets/video-desktop.mp4" muted playsinline autoplay preload="auto" aria-hidden="true"></video>
+    <button type="button" class="intro-skip" id="introSkip">Skip ›</button>
+    <span class="intro-progress" id="introProgress" aria-hidden="true"></span>
+  </div>
+
+  <!-- 背景：電路粒子動畫 -->
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- 頂部導覽列 -->
+  <header class="topbar" id="topbar">
+    <a href="#hero" class="brand"><img src="assets/logo.svg" alt="Foxconn FIH" /></a>
+    <nav class="nav">
+      <a href="#about">About</a>
+      <a href="#products">Products</a>
+      <a href="#floorplan">Location</a>
+    </nav>
+    <a class="nav-site" href="https://www.fihmobile.com/" target="_blank" rel="noopener" aria-label="Visit FIH Mobile official website (opens in new tab)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+      <span>fihmobile.com</span>
+      <svg class="nav-site-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </a>
+  </header>
+
+  <main>
+    <!-- 1. Banner -->
+    <section class="hero" id="hero">
+      <div class="hero-frame reveal">
+        <!-- Banner：手機（767px 以下）用直版，其他用橫版 -->
+        <picture>
+          <source media="(max-width: 767px)" srcset="assets/banner-mobile.svg" />
+          <img src="assets/banner-desktop.svg" alt="E/EA Solutions – From Design to Drive. Nov 17, Tuesday, 9:30 AM – 2:00 PM, Cole Engineering Center, The Square." class="hero-img" />
+        </picture>
+        <span class="hero-scan" aria-hidden="true"></span>
+        <span class="corner tl"></span><span class="corner tr"></span>
+        <span class="corner bl"></span><span class="corner br"></span>
+      </div>
+      <div class="hero-info reveal">
+        <div class="info-chip"><span class="dot"></span>Nov 17 · Tuesday</div>
+        <div class="info-chip">9:30 AM – 2:00 PM</div>
+        <div class="info-chip">Cole Engineering Center · The Square</div>
+      </div>
+      <div class="countdown reveal" id="countdown" aria-live="polite">
+        <div><b data-cd="d">--</b><span>Days</span></div>
+        <div><b data-cd="h">--</b><span>Hrs</span></div>
+        <div><b data-cd="m">--</b><span>Min</span></div>
+        <div><b data-cd="s">--</b><span>Sec</span></div>
+      </div>
+      <a href="#products" class="scroll-cue" aria-label="Scroll to products"><span></span></a>
+    </section>
+
+    <!-- 2. About FIH -->
+    <section class="section about" id="about">
+      <h2 class="section-title reveal"><span class="t-accent">//</span> About FIH</h2>
+      <div class="about-text reveal">
+        <p>
+          FIH is driving the future of smart mobility with integrated E/EA solutions spanning centralized computing,
+          connectivity, and autonomous driving. Our HPC, ZCU, TCU, and ADAS domain controllers enable scalable E/E
+          architectures, OTA updates, 4G/5G and V2X connectivity, secure cloud integration, and intelligent perception and control.
+        </p>
+        <p>
+          A subsidiary of Hon Hai Technology Group (Foxconn), FIH Mobile Limited (2038.HK) combines global R&amp;D,
+          engineering, and manufacturing capabilities with deep expertise in hardware-software integration. Through its
+          worldwide production network, FIH delivers scalable solutions across automotive electronics, smart manufacturing,
+          and manufacturing equipment and robotics for leading global customers.
+        </p>
+        <p>
+          For more information, please visit
+          <a href="https://www.fihmobile.com/" target="_blank" rel="noopener">www.fihmobile.com</a>
+        </p>
+      </div>
+      <div class="stats">
+        <div class="stat reveal"><b data-count="20" data-suffix="+">0</b><span>Years of Experience</span></div>
+        <div class="stat reveal"><b data-count="3" data-suffix="M">0</b><span>4G TCU Shipments</span></div>
+        <div class="stat reveal"><b data-count="10" data-suffix="M+">0</b><span>Lifetime Units Delivered</span></div>
+      </div>
+    </section>
+
+    <!-- 3. 產品輪播 -->
+    <section class="section products" id="products">
+      <h2 class="section-title reveal"><span class="t-accent">//</span> FIH Feature Products</h2>
+
+      <div class="filters reveal" id="filters" role="tablist" aria-label="Product categories"></div>
+
+      <div class="showcase reveal">
+        <button class="nav-btn prev" id="prevBtn" aria-label="Previous product">
+          <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg>
+        </button>
+
+        <article class="card" id="card" aria-live="polite">
+          <div class="card-border" aria-hidden="true"></div>
+          <div class="card-media">
+            <img id="pImg" src="" alt="" />
+            <span class="scanline" aria-hidden="true"></span>
+          </div>
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="tag" id="pCat">TCU</span>
+              <span class="index"><b id="pIdx">01</b> / <span id="pTotal">19</span></span>
+            </div>
+            <p class="label">Product Name</p>
+            <h3 class="p-name" id="pName"></h3>
+            <p class="label">Product Description</p>
+            <p class="p-desc" id="pDesc"></p>
+          </div>
+          <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+        </article>
+
+        <button class="nav-btn next" id="nextBtn" aria-label="Next product">
+          <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+
+      <div class="thumbs-wrap reveal">
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+    </section>
+
+    <!-- 4. 攤位圖 -->
+    <section class="section floorplan" id="floorplan">
+      <h2 class="section-title reveal"><span class="t-accent">//</span> Venue &amp; Directions</h2>
+      <p class="hint reveal venue-address">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+        <span><b>General Motors LLC</b> · 29755 Louis Chevrolet Rd., Warren, MI 48093</span>
+      </p>
+
+      <!-- Google 地圖（換地址：改下面 iframe 的 src 與兩個按鈕的連結；或改 js/main.js 的 MAP_ADDRESS） -->
+      <div class="gmap-card reveal">
+        <iframe class="gmap" src="https://www.google.com/maps?q=General%20Motors%20LLC%2C%2029755%20Louis%20Chevrolet%20Rd%2C%20Warren%2C%20MI%2048093&z=16&output=embed" title="Google Maps – General Motors LLC, 29755 Louis Chevrolet Rd., Warren, MI 48093"
+          loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <div class="gmap-bar">
+          <div class="gmap-addr">
+            <span class="gmap-label">VENUE</span>
+            <b>General Motors LLC</b><span class="gmap-street">29755 Louis Chevrolet Rd., Warren, MI 48093</span>
+          </div>
+          <div class="gmap-actions">
+            <a class="gmap-btn primary" href="https://www.google.com/maps/search/?api=1&query=General%20Motors%20LLC%2C%2029755%20Louis%20Chevrolet%20Rd%2C%20Warren%2C%20MI%2048093" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Open in Google Maps</a>
+            <a class="gmap-btn" href="https://www.google.com/maps/dir/?api=1&destination=General%20Motors%20LLC%2C%2029755%20Louis%20Chevrolet%20Rd%2C%20Warren%2C%20MI%2048093" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>Directions</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 右側固定的地圖按鈕：任何時候點了都會彈出 Google 地圖 -->
+  <button type="button" class="map-fab" id="mapFab" aria-label="Open map">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>
+    <span>MAP</span>
+  </button>
+
+  <div class="map-modal" id="mapModal" role="dialog" aria-modal="true" aria-label="Map" aria-hidden="true">
+    <div class="map-modal-box">
+      <button type="button" class="map-modal-close" id="mapModalClose" aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <p class="map-modal-title"><span>VENUE</span>General Motors LLC<small>29755 Louis Chevrolet Rd., Warren, MI 48093</small></p>
+      <div class="map-modal-frame" id="mapModalFrame"></div>
+      <div class="gmap-actions">
+        <a class="gmap-btn primary" href="https://www.google.com/maps/search/?api=1&query=General%20Motors%20LLC%2C%2029755%20Louis%20Chevrolet%20Rd%2C%20Warren%2C%20MI%2048093" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Open in Google Maps</a>
+        <a class="gmap-btn" href="https://www.google.com/maps/dir/?api=1&destination=General%20Motors%20LLC%2C%2029755%20Louis%20Chevrolet%20Rd%2C%20Warren%2C%20MI%2048093" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>Directions</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <img src="assets/fihlogo.svg" alt="FIH Automotive Electronics" class="footer-logo" />
+    <p>E/EA Solutions — From Design to Drive</p>
+    <a class="site-link" href="https://www.fihmobile.com/" target="_blank" rel="noopener" aria-label="Visit FIH Mobile official website (opens in new tab)">
+      <svg class="site-globe" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+      <span><small>Official Website</small>www.fihmobile.com</span>
+      <svg class="site-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+    </a>
+    <p class="copy">© FIH Mobile Limited. All Rights Reserved.</p>
+  </footer>
+
+  <script src="js/products.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
