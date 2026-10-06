@@ -245,8 +245,11 @@
   // 預載所有圖片，避免換頁閃爍
   introDone.then(() => PRODUCTS.forEach((p) => { const im = new Image(); im.src = p.img; }));   // 開場結束後才預載
 
-  // 分類按鈕
-  const cats = ["All", ...new Set(PRODUCTS.map((p) => p.cat))];
+  // 分類按鈕（固定順序；不在 MAIN_CATS 裡的分類，例如 Chassis / Security / Access，都歸到 Others）
+  const MAIN_CATS = ["TCU", "ZCU", "HPC", "ADAS", "IVI"];
+  const groupOf = (p) => (MAIN_CATS.includes(p.cat) ? p.cat : "Others");
+  const cats = ["All", ...MAIN_CATS.filter((c) => PRODUCTS.some((p) => p.cat === c)),
+    ...(PRODUCTS.some((p) => groupOf(p) === "Others") ? ["Others"] : [])];
   filtersEl.innerHTML = cats
     .map((c) => `<button class="chip${c === "All" ? " active" : ""}" role="tab" data-cat="${c}">${c}</button>`)
     .join("");
@@ -271,7 +274,7 @@
 
   function applyFilter(cat, scroll) {
     $$(".chip", filtersEl).forEach((c) => c.classList.toggle("active", c.dataset.cat === cat));
-    list = PRODUCTS.map((p, i) => ({ ...p, i })).filter((p) => cat === "All" || p.cat === cat);
+    list = PRODUCTS.map((p, i) => ({ ...p, i })).filter((p) => cat === "All" || groupOf(p) === cat);
     thumbBtns.forEach((t) => t.classList.toggle("hidden", !list.some((p) => p.i === +t.dataset.i)));
     cur = -1;
     busy = false;
