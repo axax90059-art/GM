@@ -144,7 +144,7 @@ main { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
 .about-text { color: var(--text-dim); font-size: 1.02rem; margin-bottom: 28px; }
 .about-text p + p { margin-top: 1em; }
 .about-text a { color: var(--cyan); text-decoration: underline; text-underline-offset: 3px; }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .stat {
   padding: 22px 12px; text-align: center; border-radius: var(--radius);
   background: linear-gradient(160deg, rgba(56, 214, 255, 0.12), rgba(10, 40, 80, 0.3));
@@ -152,6 +152,12 @@ main { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
 }
 .stat b { display: block; font-family: var(--font-display); font-size: clamp(1.6rem, 5vw, 2.6rem); color: #fff; text-shadow: 0 0 18px rgba(56, 214, 255, 0.55); }
 .stat span { font-size: 0.8rem; color: var(--text-dim); }
+/* 獎項卡片：獎盃圖示 + 文字（高度跟數字卡片一樣） */
+.stat-award b {
+  display: flex; align-items: center; justify-content: center; gap: 0.35em;
+  font-size: clamp(1rem, 2.2vw, 1.5rem); height: calc(clamp(1.6rem, 5vw, 2.6rem) * 1.6);   /* = 數字的字高 × 行高 1.6 */
+}
+.award-icon { width: 1.2em; height: 1.2em; flex: none; fill: none; stroke: var(--cyan); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 8px rgba(56, 214, 255, 0.6)); }
 
 /* ---------- Filters ---------- */
 .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 18px; scrollbar-width: none; }
@@ -434,7 +440,7 @@ body.map-open { overflow: hidden; }
   .nav-btn { position: absolute; top: 88px; width: 44px; height: 44px; }
   .nav-btn.prev { left: -8px; }
   .nav-btn.next { right: -8px; }
-  .stats { gap: 8px; }
+  .stats { gap: 8px; grid-template-columns: repeat(2, 1fr); }
   .stat { padding: 16px 6px; }
   .stat span { font-size: 0.8rem; line-height: 1.35; display: block; }
   .thumb { width: 76px; height: 76px; }
