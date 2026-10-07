@@ -47,7 +47,7 @@ const PRODUCTS = [
   {
     name: "Multi-Modem 5G TCU for L4",
     cat: "TCU",
-    img: "assets/products/p08.png",
+    img: "assets/products/p08.png?v=20261007n",
     desc: "High-performance 5G TCU for advanced L4 autonomous driving function for instant safety reporting, with dual 5G redundancy, GNSS, C-V2X, and GbE ports.",
   },
   {
