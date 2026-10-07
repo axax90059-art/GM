@@ -402,32 +402,4 @@
 
   cur = -1;
   go(0, 1, true);
-
-  /* =========================================================
-     5. 地圖：右側懸浮按鈕 → 彈出 Google 地圖
-     ========================================================= */
-  const MAP_EMBED = "https://www.google.com/maps?q=General%20Motors%20LLC%2C%2029755%20Louis%20Chevrolet%20Rd%2C%20Warren%2C%20MI%2048093&z=16&output=embed";
-  const mapModal = $("#mapModal"), mapFrame = $("#mapModalFrame");
-  let mapLastFocus = null;
-  const openMapModal = () => {
-    // 第一次打開才載入 Google 地圖（網頁本身開得比較快）；視窗一直保持實際大小，地圖不會量錯尺寸
-    if (!mapFrame.firstChild) {
-      mapFrame.innerHTML = `<iframe class="gmap" src="${MAP_EMBED}" title="Google Maps" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`;
-    }
-    mapLastFocus = document.activeElement;
-    mapModal.classList.add("open");
-    mapModal.setAttribute("aria-hidden", "false");
-    document.body.classList.add("map-open");
-    $("#mapModalClose").focus({ preventScroll: true });
-  };
-  const closeMapModal = () => {
-    mapModal.classList.remove("open");
-    mapModal.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("map-open");
-    if (mapLastFocus && mapLastFocus !== document.body) mapLastFocus.focus({ preventScroll: true });
-  };
-  $("#mapFab").addEventListener("click", openMapModal);
-  $("#mapModalClose").addEventListener("click", closeMapModal);
-  mapModal.addEventListener("click", (e) => { if (e.target === mapModal) closeMapModal(); });
-  addEventListener("keydown", (e) => { if (e.key === "Escape" && mapModal.classList.contains("open")) closeMapModal(); });
 })();
