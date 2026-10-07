@@ -196,10 +196,11 @@
     entries.forEach((e) => {
       if (!e.isIntersecting) return;
       const el = e.target, to = +el.dataset.count, suffix = el.dataset.suffix || "";
+      const dec = (el.dataset.count.split(".")[1] || "").length;   // 支援小數，例如 3.6
       const t0 = performance.now(), dur = 1600;
       const step = (now) => {
         const p = Math.min((now - t0) / dur, 1);
-        el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))) + suffix;
+        el.textContent = (to * (1 - Math.pow(1 - p, 3))).toFixed(dec) + suffix;
         if (p < 1) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
