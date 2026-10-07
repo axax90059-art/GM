@@ -45,7 +45,7 @@ const PRODUCTS = [
     desc: "Modem-only TCU delivering essential 5G RedCap or 4G LTE connectivity, GNSS L1+L5, 100Base-T1 Ethernet, and passive cooling.",
   },
   {
-    name: "Multi-Modem 5G TCU for L4",
+    name: "Multi-Modem TCU for L4",
     cat: "TCU",
     img: "assets/products/p08.png?v=20261007n",
     desc: "High-performance 5G TCU for advanced L4 autonomous driving function for instant safety reporting, with dual 5G redundancy, GNSS, C-V2X, and GbE ports.",
