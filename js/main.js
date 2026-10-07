@@ -30,16 +30,32 @@
       document.body.classList.remove("intro-on");
       video.pause();
       setTimeout(() => intro.remove(), 1000);
+      loadBanner(true);
       onDone();
-      setTimeout(introResolve, 300);   // 等淡出開始後再啟動背景動畫等工作，讓轉場順暢
+      setTimeout(introResolve, 950);   // 等淡出（0.9 秒）完全結束，才啟動背景動畫、載入產品圖，轉場不會卡
     };
-    if (REDUCE_MOTION) { intro.remove(); document.body.classList.remove("intro-on"); onDone(); introResolve(); return; }
+
+    // Banner 晚一點才載入，不跟影片搶網路：影片整段下載完才開始下載 Banner，快播完時才解碼
+    let bannerRequested = false, bannerDecoded = false;
+    function loadBanner(decodeNow) {
+      const img = $(".hero-img"), source = $(".hero-frame source");
+      if (!img) return;
+      if (!bannerRequested) {
+        bannerRequested = true;
+        if (source && source.dataset.srcset) source.srcset = source.dataset.srcset;
+        if (img.dataset.src) img.src = img.dataset.src;
+      }
+      if (decodeNow && !bannerDecoded && img.decode) { bannerDecoded = true; img.decode().catch(() => {}); }
+    }
+
+    if (REDUCE_MOTION) { intro.remove(); document.body.classList.remove("intro-on"); loadBanner(true); onDone(); introResolve(); return; }
 
     timers.push(setTimeout(finish, 16000));   // 保險：不管任何狀況，最多 16 秒一定進網站
 
-    // 開場期間先把 Banner 解碼好，淡出時就不會卡一下
-    const banner = $(".hero-img");
-    if (banner && banner.decode) banner.decode().catch(() => {});
+    video.addEventListener("progress", () => {
+      const b = video.buffered;
+      if (video.duration && b.length && b.end(b.length - 1) >= video.duration - 0.2) loadBanner(false);
+    });
 
     // 影片真的開始播放才淡入，避免先閃黑畫面
     video.addEventListener("playing", () => intro.classList.add("playing"));
@@ -61,7 +77,9 @@
     video.addEventListener("ended", finish);
     video.addEventListener("error", finish);
     video.addEventListener("timeupdate", () => {
-      if (video.duration) bar.style.transform = `scaleX(${video.currentTime / video.duration})`;
+      if (!video.duration) return;
+      bar.style.transform = `scaleX(${video.currentTime / video.duration})`;
+      if (video.duration - video.currentTime < 1.2) loadBanner(true);   // 快播完：先把 Banner 解碼好，淡出時不卡
     });
     $("#introSkip").addEventListener("click", finish);
     addEventListener("keydown", (e) => { if (e.key === "Escape") finish(); });
@@ -80,7 +98,8 @@
         if (video.readyState >= 4) tryPlay(6);
         else video.addEventListener("canplaythrough", () => tryPlay(6), { once: true });
       }
-      timers.push(setTimeout(() => { if (video.currentTime === 0) tryPlay(2); }, 3000));   // 3 秒還沒播：再試一次
+      // 3 秒還沒播：緩衝夠了才再試（緩衝不夠就硬播，會播到一半停住）
+      timers.push(setTimeout(() => { if (video.currentTime === 0 && video.readyState >= 4) tryPlay(2); }, 3000));
       timers.push(setTimeout(() => { if (video.currentTime === 0) finish(); }, 7000));    // 7 秒還沒開始（網路很慢）→ 跳過
     };
     if (!document.hidden) start();
@@ -94,7 +113,7 @@
   /* ---------- Banner：視窗寬度跨過 767px 時，強制重新挑選橫版／直版 ---------- */
   const heroImg = $(".hero-img");
   const bannerMQ = matchMedia("(max-width: 767px)");
-  bannerMQ.addEventListener("change", () => { heroImg.src = heroImg.getAttribute("src"); });
+  bannerMQ.addEventListener("change", () => { if (heroImg.getAttribute("src")) heroImg.src = heroImg.getAttribute("src"); });
 
   /* =========================================================
      1. 背景：電路板粒子動畫
@@ -243,8 +262,6 @@
   let busy = false;
   let timer = null, barAnim = null;
 
-  // 預載所有圖片，避免換頁閃爍
-  introDone.then(() => PRODUCTS.forEach((p) => { const im = new Image(); im.src = p.img; }));   // 開場結束後才預載
 
   // 分類按鈕（固定順序；不在 MAIN_CATS 裡的分類，例如 Chassis / Security / Access，都歸到 Others）
   const MAIN_CATS = ["TCU", "ZCU", "HPC", "ADAS", "IVI"];
@@ -264,8 +281,22 @@
     (p, i) => `<button class="thumb" data-i="${i}" aria-label="${p.name}"><img data-src="${p.img}" alt="" /></button>`
   ).join("");
   const thumbBtns = $$(".thumb", thumbsEl);
-  // 縮圖等開場動畫結束才載入，避免跟影片搶頻寬
-  introDone.then(() => $$("img[data-src]", thumbsEl).forEach((im) => (im.src = im.dataset.src)));
+  // 縮圖等開場動畫結束才載入，而且一張載完、瀏覽器有空時才載下一張（一次全部載入會卡）
+  // 載過的圖會留在快取，產品卡片換頁時直接用，不會閃爍
+  introDone.then(() => {
+    const imgs = $$("img[data-src]", thumbsEl);
+    const idle = window.requestIdleCallback ? (f) => requestIdleCallback(f, { timeout: 300 }) : (f) => setTimeout(f, 60);   // 最多等 0.3 秒
+    let k = 0;
+    const next = () => {
+      const im = imgs[k++];
+      if (!im) return;
+      const go = () => idle(next);
+      im.addEventListener("load", go, { once: true });
+      im.addEventListener("error", go, { once: true });
+      im.src = im.dataset.src;
+    };
+    next();
+  });
   thumbsEl.addEventListener("click", (e) => {
     const t = e.target.closest(".thumb");
     if (!t) return;
