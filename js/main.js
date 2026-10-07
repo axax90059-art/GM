@@ -276,27 +276,14 @@
     if (btn) applyFilter(btn.dataset.cat);
   });
 
-  // 縮圖
+  // 縮圖：用 assets/products/thumb/ 裡的小圖（最長邊 200px），開場結束後一次載入
+  // 換產品圖時記得也要更新小圖（README 有說明）
+  const thumbOf = (src) => src.replace("assets/products/", "assets/products/thumb/");
   thumbsEl.innerHTML = PRODUCTS.map(
-    (p, i) => `<button class="thumb" data-i="${i}" aria-label="${p.name}"><img data-src="${p.img}" alt="" /></button>`
+    (p, i) => `<button class="thumb" data-i="${i}" aria-label="${p.name}"><img data-src="${thumbOf(p.img)}" alt="" decoding="async" /></button>`
   ).join("");
   const thumbBtns = $$(".thumb", thumbsEl);
-  // 縮圖等開場動畫結束才載入，而且一張載完、瀏覽器有空時才載下一張（一次全部載入會卡）
-  // 載過的圖會留在快取，產品卡片換頁時直接用，不會閃爍
-  introDone.then(() => {
-    const imgs = $$("img[data-src]", thumbsEl);
-    const idle = window.requestIdleCallback ? (f) => requestIdleCallback(f, { timeout: 300 }) : (f) => setTimeout(f, 60);   // 最多等 0.3 秒
-    let k = 0;
-    const next = () => {
-      const im = imgs[k++];
-      if (!im) return;
-      const go = () => idle(next);
-      im.addEventListener("load", go, { once: true });
-      im.addEventListener("error", go, { once: true });
-      im.src = im.dataset.src;
-    };
-    next();
-  });
+  introDone.then(() => $$("img[data-src]", thumbsEl).forEach((im) => (im.src = im.dataset.src)));
   thumbsEl.addEventListener("click", (e) => {
     const t = e.target.closest(".thumb");
     if (!t) return;
@@ -340,6 +327,8 @@
     card.style.setProperty("--flash-x", dir > 0 ? "80%" : "20%");
     pImg.src = p.img;
     pImg.alt = p.name;
+    // 預先載入下一個產品的大圖（只載一張），換頁時不會閃
+    if (list.length > 1) { const nx = new Image(); nx.decoding = "async"; nx.src = list[(cur + 1) % list.length].img; }
     pCat.textContent = p.cat;
     pDesc.textContent = p.desc;
     decode(pName, p.name);

@@ -26,7 +26,7 @@ website/
 | 要改什麼 | 在哪裡 |
 |---|---|
 | 新增 / 修改產品 | `js/products.js` |
-| 換更高畫質產品圖 | 覆蓋 `assets/products/pXX.png`（建議去背 PNG，寬約 900px） |
+| 換產品圖 | 覆蓋 `assets/products/pXX.png`（去背 PNG，最長邊約 900px），**同時**覆蓋縮圖 `assets/products/thumb/pXX.png`（最長邊約 200px），再把 `js/products.js` 裡該圖的 `?v=` 改一下 |
 | 活動時間（倒數計時） | `js/main.js` 最上方 `EVENT_START` / `EVENT_END` |
 | Banner | 覆蓋 `assets/banner-desktop.svg`、`assets/banner-mobile.svg` |
 | 自動輪播速度 | `js/main.js` 的 `AUTOPLAY_MS` |
