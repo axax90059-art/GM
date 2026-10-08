@@ -264,7 +264,7 @@
 
 
   // 分類按鈕（固定順序；不在 MAIN_CATS 裡的分類，例如 Chassis / Security / Access，都歸到 Others）
-  const MAIN_CATS = ["TCU", "ZCU", "HPC", "ADAS", "IVI"];
+  const MAIN_CATS = ["TCU", "HPC", "ZCU", "IVI", "ADAS"];
   const groupOf = (p) => (MAIN_CATS.includes(p.cat) ? p.cat : "Others");
   const cats = ["All", ...MAIN_CATS.filter((c) => PRODUCTS.some((p) => p.cat === c)),
     ...(PRODUCTS.some((p) => groupOf(p) === "Others") ? ["Others"] : [])];
