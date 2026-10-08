@@ -1,425 +1,394 @@
 /* =========================================================
-   FIH – E/EA Solutions  |  main script
+   FIH Automotive – E/EA Solutions  |  v2 main script
    ========================================================= */
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const REDUCE_MOTION = reduceMotion;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const REDUCE_MOTION = reduce;
 
   /* ---------- 設定 ---------- */
-  const EVENT_START = new Date("2026-11-17T09:30:00"); // 活動開始時間（使用者本地時區）
-  const EVENT_END = new Date("2026-11-17T14:00:00");
-  const AUTOPLAY_MS = 6000; // 產品自動輪播間隔
-
-  /* ---------- 開場動畫：播完 / Skip / 出錯 / 逾時 都會進入網站 ---------- */
-  // 開場動畫結束的時間點：背景動畫、產品圖預載等「重的工作」等開場結束才開始，避免跟影片搶資源造成卡頓
-  let introResolve;
-  const introDone = new Promise((r) => (introResolve = r));
-
-  function playIntro(onDone) {
-    const intro = $("#intro"), video = $("#introVideo"), bgCanvas = $("#introBg"), bar = $("#introProgress");
-    const mobileMQ = matchMedia("(max-width: 767px)");
-    let finished = false;
-    const timers = [];
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      timers.forEach(clearTimeout);
-      intro.classList.add("done");
-      document.body.classList.remove("intro-on");
-      video.pause();
-      setTimeout(() => intro.remove(), 1000);
-      loadBanner(true);
-      onDone();
-      setTimeout(introResolve, 950);   // 等淡出（0.9 秒）完全結束，才啟動背景動畫、載入產品圖，轉場不會卡
-    };
-
-    // Banner 晚一點才載入，不跟影片搶網路：影片整段下載完才開始下載 Banner，快播完時才解碼
-    let bannerRequested = false, bannerDecoded = false;
-    function loadBanner(decodeNow) {
-      const img = $(".hero-img"), source = $(".hero-frame source");
-      if (!img) return;
-      if (!bannerRequested) {
-        bannerRequested = true;
-        if (source && source.dataset.srcset) source.srcset = source.dataset.srcset;
-        if (img.dataset.src) img.src = img.dataset.src;
-      }
-      if (decodeNow && !bannerDecoded && img.decode) { bannerDecoded = true; img.decode().catch(() => {}); }
-    }
-
-    if (REDUCE_MOTION) { intro.remove(); document.body.classList.remove("intro-on"); loadBanner(true); onDone(); introResolve(); return; }
-
-    timers.push(setTimeout(finish, 16000));   // 保險：不管任何狀況，最多 16 秒一定進網站
-
-    video.addEventListener("progress", () => {
-      const b = video.buffered;
-      if (video.duration && b.length && b.end(b.length - 1) >= video.duration - 0.2) loadBanner(false);
-    });
-
-    // 影片真的開始播放才淡入，避免先閃黑畫面
-    video.addEventListener("playing", () => intro.classList.add("playing"));
-
-    // 手機：用 64×36 的小畫布複製影片畫面再放大，當作上下的模糊背景（比第二支影片＋即時模糊輕很多）
-    const ctx = bgCanvas.getContext("2d");
-    const paintBg = () => {
-      if (finished) return;
-      if (mobileMQ.matches && video.readyState >= 2) {
-        ctx.drawImage(video, 0, 0, bgCanvas.width, bgCanvas.height);
-        ctx.fillStyle = "rgba(2, 10, 20, 0.55)";
-        ctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-      }
-      if (video.requestVideoFrameCallback) video.requestVideoFrameCallback(paintBg);
-      else requestAnimationFrame(paintBg);
-    };
-    paintBg();
-
-    video.addEventListener("ended", finish);
-    video.addEventListener("error", finish);
-    video.addEventListener("timeupdate", () => {
-      if (!video.duration) return;
-      bar.style.transform = `scaleX(${video.currentTime / video.duration})`;
-      if (video.duration - video.currentTime < 1.2) loadBanner(true);   // 快播完：先把 Banner 解碼好，淡出時不卡
-    });
-    $("#introSkip").addEventListener("click", finish);
-    addEventListener("keydown", (e) => { if (e.key === "Escape") finish(); });
-
-    const tryPlay = (retries) => {
-      const p = video.play();
-      if (!p) return;
-      p.catch((err) => {
-        if (err.name === "NotAllowedError") return finish();          // 瀏覽器禁止自動播放 → 直接進網站
-        if (retries > 0) setTimeout(() => tryPlay(retries - 1), 500); // 其他中斷（例如省電暫停）→ 稍後重試
-      });
-    };
-    const start = () => {
-      // 影片已在 HTML 裡設定 autoplay、一打開就開始下載；緩衝足夠時瀏覽器會自動播放，這裡只是保險
-      if (video.paused) {
-        if (video.readyState >= 4) tryPlay(6);
-        else video.addEventListener("canplaythrough", () => tryPlay(6), { once: true });
-      }
-      // 3 秒還沒播：緩衝夠了才再試（緩衝不夠就硬播，會播到一半停住）
-      timers.push(setTimeout(() => { if (video.currentTime === 0 && video.readyState >= 4) tryPlay(2); }, 3000));
-      timers.push(setTimeout(() => { if (video.currentTime === 0) finish(); }, 7000));    // 7 秒還沒開始（網路很慢）→ 跳過
-    };
-    if (!document.hidden) start();
-    else document.addEventListener("visibilitychange", function onShow() {          // 在背景分頁開啟：切回來才開始播
-      if (document.hidden) return;
-      document.removeEventListener("visibilitychange", onShow);
-      start();
-    });
-  }
+  // CES 2027：拉斯維加斯當地時間（PST, UTC−8）。開展時間如有變動，改這兩行即可
+  const EVENT_START = new Date("2027-01-06T10:00:00-08:00");   // 1/6 開展
+  const EVENT_END = new Date("2027-01-10T00:00:00-08:00");     // 1/9 展期結束（當天整天顯示 LIVE NOW）
+  const AUTOPLAY_MS = 7000;
 
   /* ---------- Banner：視窗寬度跨過 767px 時，強制重新挑選橫版／直版 ---------- */
-  const heroImg = $(".hero-img");
+  const heroImg = $(".hero-banner img");
   const bannerMQ = matchMedia("(max-width: 767px)");
-  bannerMQ.addEventListener("change", () => { if (heroImg.getAttribute("src")) heroImg.src = heroImg.getAttribute("src"); });
+  bannerMQ.addEventListener("change", () => { heroImg.src = heroImg.getAttribute("src"); });
 
   /* =========================================================
-     1. 背景：電路板粒子動畫
+     進入網站：Banner 淡入（已移除開場影片）
      ========================================================= */
-  const canvas = $("#bg-canvas");
-  const ctx = canvas.getContext("2d");
-  let W, H, nodes = [], pulses = [];
+  // 等網頁（Banner、字型）載入完，才開始背景動畫和產品圖下載，不跟第一屏搶網路
+  const introDone = new Promise((r) => (document.readyState === "complete" ? r() : addEventListener("load", () => r(), { once: true })));
+  setTimeout(() => document.body.classList.add("loaded"), 60);   // 稍等一下再加，讓 Banner 淡入動畫生效
 
-  function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = canvas.width = innerWidth * dpr;
-    H = canvas.height = innerHeight * dpr;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
-    const count = Math.round((innerWidth * innerHeight) / 18000);
-    nodes = Array.from({ length: count }, () => ({
-      x: Math.random() * innerWidth,
-      y: Math.random() * innerHeight,
-      vx: (Math.random() - 0.5) * 0.25,
-      vy: (Math.random() - 0.5) * 0.25,
-      r: Math.random() * 1.6 + 0.6,
-    }));
+  /* =========================================================
+     Background — 靜態點陣網格 + 緩慢亮起的電路走線（不往前衝）
+     ========================================================= */
+  const cv = $("#bg");
+  const ctx = cv.getContext("2d");
+  const GAP = 36;                 // 網格間距
+  let W = 0, H = 0, cols = 0, rows = 0, traces = [], dotLayer = null;
+
+  function size() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cols = Math.ceil(W / GAP) + 1; rows = Math.ceil(H / GAP) + 1;
+    // 點陣只畫一次，存成離屏圖層
+    dotLayer = document.createElement("canvas");
+    dotLayer.width = W * dpr; dotLayer.height = H * dpr;
+    const d = dotLayer.getContext("2d");
+    d.scale(dpr, dpr);
+    for (let x = 0; x < cols; x++) for (let y = 0; y < rows; y++) {
+      d.fillStyle = "rgba(120,190,255,0.10)";
+      d.fillRect(x * GAP - 0.75, y * GAP - 0.75, 1.5, 1.5);
+    }
+  }
+  addEventListener("resize", size);
+  size();
+
+  // 產生一條沿網格走的直角折線
+  function spawnTrace() {
+    let x = (Math.random() * cols) | 0, y = (Math.random() * rows) | 0;
+    const pts = [[x, y]];
+    let dir = Math.random() < 0.5 ? 0 : 1;
+    const segs = 2 + ((Math.random() * 3) | 0);
+    for (let i = 0; i < segs; i++) {
+      const len = (2 + Math.random() * 6) | 0, s = Math.random() < 0.5 ? -1 : 1;
+      if (dir === 0) x += len * s; else y += len * s;
+      pts.push([x, y]); dir ^= 1;
+    }
+    let total = 0;
+    for (let i = 1; i < pts.length; i++) total += Math.abs(pts[i][0] - pts[i - 1][0]) + Math.abs(pts[i][1] - pts[i - 1][1]);
+    traces.push({ pts, total, p: 0, life: 1, speed: 0.12 + Math.random() * 0.1 });
   }
 
-  function drawBg() {
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
-    const maxD = 130;
-    for (let i = 0; i < nodes.length; i++) {
-      const a = nodes[i];
-      a.x += a.vx; a.y += a.vy;
-      if (a.x < 0 || a.x > innerWidth) a.vx *= -1;
-      if (a.y < 0 || a.y > innerHeight) a.vy *= -1;
-      for (let j = i + 1; j < nodes.length; j++) {
-        const b = nodes[j];
-        const dx = a.x - b.x, dy = a.y - b.y;
-        const d = Math.hypot(dx, dy);
-        if (d < maxD) {
-          // 用直角折線，模擬 PCB 走線
-          ctx.strokeStyle = `rgba(56,214,255,${(1 - d / maxD) * 0.18})`;
-          ctx.lineWidth = 0.7;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
-          if (!reduceMotion && Math.random() < 0.0006) pulses.push({ a, b, t: 0 });
-        }
+  function pointAt(tr, dist) {
+    const out = [tr.pts[0]];
+    let left = dist;
+    for (let i = 1; i < tr.pts.length; i++) {
+      const [ax, ay] = tr.pts[i - 1], [bx, by] = tr.pts[i];
+      const seg = Math.abs(bx - ax) + Math.abs(by - ay);
+      if (left >= seg) { out.push([bx, by]); left -= seg; continue; }
+      const k = left / seg;
+      out.push([ax + (bx - ax) * k, ay + (by - ay) * k]);
+      break;
+    }
+    return out;
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    ctx.clearRect(0, 0, W, H);
+
+    // 柔和的藍色光暈（緩慢呼吸，不移動）
+    const breathe = 0.16 + Math.sin(now / 4000) * 0.03;
+    const g = ctx.createRadialGradient(W * 0.5, H * 0.35, 0, W * 0.5, H * 0.35, Math.max(W, H) * 0.7);
+    g.addColorStop(0, `rgba(26,124,255,${breathe})`);
+    g.addColorStop(1, "rgba(26,124,255,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+    if (dotLayer.width && dotLayer.height) ctx.drawImage(dotLayer, 0, 0, W, H);   // 視窗縮放瞬間尺寸可能為 0，先跳過
+
+    // 電路走線：慢慢畫出 → 停留 → 淡出
+    if (traces.length < 7 && Math.random() < dt * 1.2) spawnTrace();
+    traces = traces.filter((t) => t.life > 0);
+    for (const t of traces) {
+      if (t.p < 1) t.p = Math.min(1, t.p + dt * t.speed * (8 / t.total) * 2);
+      else t.life -= dt * 0.35;
+      const path = pointAt(t, t.p * t.total);
+      ctx.strokeStyle = `rgba(63,208,255,${0.28 * t.life})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      path.forEach(([x, y], i) => (i ? ctx.lineTo(x * GAP, y * GAP) : ctx.moveTo(x * GAP, y * GAP)));
+      ctx.stroke();
+      // 起點與終點小方塊（像 PCB 焊點）
+      const [sx, sy] = path[0], [ex, ey] = path[path.length - 1];
+      ctx.fillStyle = `rgba(63,208,255,${0.45 * t.life})`;
+      ctx.fillRect(sx * GAP - 2, sy * GAP - 2, 4, 4);
+      if (t.p < 1) {
+        const hg = ctx.createRadialGradient(ex * GAP, ey * GAP, 0, ex * GAP, ey * GAP, 10);
+        hg.addColorStop(0, "rgba(200,240,255,0.8)");
+        hg.addColorStop(1, "rgba(63,208,255,0)");
+        ctx.fillStyle = hg;
+        ctx.beginPath(); ctx.arc(ex * GAP, ey * GAP, 10, 0, Math.PI * 2); ctx.fill();
+      } else {
+        ctx.fillRect(ex * GAP - 2, ey * GAP - 2, 4, 4);
       }
-      ctx.fillStyle = "rgba(127,227,255,0.8)";
-      ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2); ctx.fill();
     }
-    // 沿走線跑的光點
-    pulses = pulses.filter((p) => p.t <= 1);
-    for (const p of pulses) {
-      p.t += 0.02;
-      const seg1 = Math.abs(p.b.x - p.a.x), seg2 = Math.abs(p.b.y - p.a.y);
-      const total = seg1 + seg2 || 1;
-      const dist = p.t * total;
-      let x, y;
-      if (dist < seg1) { x = p.a.x + Math.sign(p.b.x - p.a.x) * dist; y = p.a.y; }
-      else { x = p.b.x; y = p.a.y + Math.sign(p.b.y - p.a.y) * (dist - seg1); }
-      const g = ctx.createRadialGradient(x, y, 0, x, y, 8);
-      g.addColorStop(0, "rgba(255,255,255,0.95)");
-      g.addColorStop(1, "rgba(56,214,255,0)");
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
-    }
-    if (!reduceMotion) requestAnimationFrame(drawBg);
+    if (!reduce) requestAnimationFrame(frame);
   }
-  addEventListener("resize", resize);
-  resize();
-  introDone.then(() => requestAnimationFrame(drawBg));   // 開場結束後才開始畫背景
+  introDone.then(() => requestAnimationFrame(frame));   // 開場結束後才開始畫背景
 
   /* =========================================================
-     2. 導覽列 / 捲動出現動畫
+     Nav: scrolled state, progress bar, active section
      ========================================================= */
-  const topbar = $("#topbar");
-  addEventListener("scroll", () => topbar.classList.toggle("scrolled", scrollY > 20), { passive: true });
+  const nav = $("#nav"), bar = $("#scrollBar");
+  const onScroll = () => {
+    nav.classList.toggle("scrolled", scrollY > 30);
+    const max = document.documentElement.scrollHeight - innerHeight;
+    bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+  };
+  addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (!e.isIntersecting) return;
-      e.target.classList.add("in");
-      io.unobserve(e.target);
+  const navLinks = $$(".nav-links a");
+  const secIO = new IntersectionObserver((es) => {
+    es.forEach((e) => {
+      if (e.isIntersecting) navLinks.forEach((a) => a.classList.toggle("active", a.dataset.sec === e.target.id));
     });
-  }, { threshold: 0.15 });
-  // 開場動畫結束後，才開始畫面淡入
-  playIntro(() => {
-    $$(".reveal").forEach((el, i) => {
-      el.style.transitionDelay = `${(i % 3) * 0.08}s`;
-      // 第一屏看得到的直接淡入（不必等捲動偵測），其他的捲到才淡入
-      if (el.getBoundingClientRect().top < innerHeight) el.classList.add("in");
-      else io.observe(el);
-    });
-  });
+  }, { rootMargin: "-45% 0px -50% 0px" });
+  ["about", "products", "floorplan"].forEach((id) => secIO.observe(document.getElementById(id)));
 
-  // 數字跳動
-  const countIO = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
+  /* ---------- Reveal ---------- */
+  const revIO = new IntersectionObserver((es) => {
+    es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); revIO.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  $$("[data-anim]").forEach((el) => revIO.observe(el));
+
+  /* ---------- KPI counters ---------- */
+  const cntIO = new IntersectionObserver((es) => {
+    es.forEach((e) => {
       if (!e.isIntersecting) return;
-      const el = e.target, to = +el.dataset.count, suffix = el.dataset.suffix || "";
+      const el = e.target, to = +el.dataset.count, t0 = performance.now();
       const dec = (el.dataset.count.split(".")[1] || "").length;   // 支援小數，例如 3.6
-      const t0 = performance.now(), dur = 1600;
       const step = (now) => {
-        const p = Math.min((now - t0) / dur, 1);
-        el.textContent = (to * (1 - Math.pow(1 - p, 3))).toFixed(dec) + suffix;
+        const p = Math.min((now - t0) / 1800, 1);
+        el.textContent = (to * (1 - Math.pow(1 - p, 4))).toFixed(dec);
         if (p < 1) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
-      countIO.unobserve(el);
+      cntIO.unobserve(el);
     });
-  }, { threshold: 0.6 });
-  $$("[data-count]").forEach((el) => countIO.observe(el));
+  }, { threshold: 0.5 });
+  $$("[data-count]").forEach((el) => cntIO.observe(el));
 
-  /* =========================================================
-     3. 倒數計時
-     ========================================================= */
-  const cd = $("#countdown");
-  function tick() {
+  /* ---------- Hero tilt ---------- */
+  const banner = $("#heroBanner");
+  if (!reduce && matchMedia("(hover: hover)").matches) {
+    banner.addEventListener("mousemove", (e) => {
+      const r = banner.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+      banner.style.transform = `perspective(1400px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg)`;
+    });
+    banner.addEventListener("mouseleave", () => (banner.style.transform = ""));
+  }
+
+  /* ---------- Countdown ---------- */
+  const cdLabel = $("#cdLabel"), cdValue = $("#cdValue");
+  (function tick() {
     const now = new Date();
-    if (now >= EVENT_END) { cd.classList.add("live"); cd.innerHTML = "<div><b>Thank you for visiting!</b></div>"; return; }
-    if (now >= EVENT_START) { cd.classList.add("live"); cd.innerHTML = '<div><b>● LIVE NOW</b><span>Visit our booth</span></div>'; return; }
+    if (now >= EVENT_END) { cdLabel.textContent = "STATUS"; cdValue.textContent = "Thank you for visiting"; return; }
+    if (now >= EVENT_START) { cdLabel.textContent = "STATUS"; cdValue.textContent = "LIVE NOW"; setTimeout(tick, 30000); return; }
     let s = Math.floor((EVENT_START - now) / 1000);
     const d = Math.floor(s / 86400); s %= 86400;
     const h = Math.floor(s / 3600); s %= 3600;
     const m = Math.floor(s / 60); s %= 60;
-    const pad = (n) => String(n).padStart(2, "0");
-    $('[data-cd="d"]', cd).textContent = d;
-    $('[data-cd="h"]', cd).textContent = pad(h);
-    $('[data-cd="m"]', cd).textContent = pad(m);
-    $('[data-cd="s"]', cd).textContent = pad(s);
+    const p = (n) => String(n).padStart(2, "0");
+    cdValue.textContent = `${d}d ${p(h)}:${p(m)}:${p(s)}`;
     setTimeout(tick, 1000);
-  }
-  tick();
+  })();
 
   /* =========================================================
-     4. 產品輪播
+     Product stage
      ========================================================= */
-  const card = $("#card");
-  const pImg = $("#pImg"), pName = $("#pName"), pDesc = $("#pDesc"), pCat = $("#pCat");
-  const pIdx = $("#pIdx"), pTotal = $("#pTotal"), bar = $("#progressBar");
-  const thumbsEl = $("#thumbs"), filtersEl = $("#filters");
+  const stage = $("#stage");
+  const el = {
+    img: $("#pImg"), name: $("#pName"), cat: $("#pCat"), specs: $("#pSpecs"), desc: $("#pDesc"),
+    idx: $("#pIdx"), total: $("#pTotal"), time: $("#timeBar"),
+    tabs: $("#catTabs"), film: $("#filmstrip"),
+  };
+  const ALL = PRODUCTS.map((p, i) => ({ ...p, i }));
+  let list = ALL, cur = -1, busy = false, timer = null, anim = null, activeCat = "ALL";
 
-  let list = PRODUCTS.map((p, i) => ({ ...p, i })); // 目前篩選後的清單
-  let cur = 0;
-  let busy = false;
-  let timer = null, barAnim = null;
+  const pad = (n) => String(n).padStart(2, "0");
 
-
-  // 分類按鈕（固定順序；不在 MAIN_CATS 裡的分類，例如 Chassis / Security / Access，都歸到 Others）
+  // Tabs（固定順序：ALL / TCU / HPC / ZCU / IVI / ADAS / Others；不在 MAIN_CATS 裡的分類，例如 Chassis / Security / Access，都歸到 Others）
   const MAIN_CATS = ["TCU", "HPC", "ZCU", "IVI", "ADAS"];
   const groupOf = (p) => (MAIN_CATS.includes(p.cat) ? p.cat : "Others");
-  const cats = ["All", ...MAIN_CATS.filter((c) => PRODUCTS.some((p) => p.cat === c)),
-    ...(PRODUCTS.some((p) => groupOf(p) === "Others") ? ["Others"] : [])];
-  filtersEl.innerHTML = cats
-    .map((c) => `<button class="chip${c === "All" ? " active" : ""}" role="tab" data-cat="${c}">${c}</button>`)
-    .join("");
-  filtersEl.addEventListener("click", (e) => {
-    const btn = e.target.closest(".chip");
-    if (btn) applyFilter(btn.dataset.cat);
-  });
+  const counts = ALL.reduce((m, p) => ((m[groupOf(p)] = (m[groupOf(p)] || 0) + 1), m), {});
+  const tabCats = ["ALL", ...MAIN_CATS.filter((c) => counts[c]), ...(counts.Others ? ["Others"] : [])];
+  const tabLabel = (c) => c;   // 標籤顯示：ALL / TCU / HPC / ZCU / IVI / ADAS / Others
+  el.tabs.innerHTML =
+    tabCats.map((c) => `<button class="tab" role="tab" data-cat="${c}">${tabLabel(c)}</button>`).join("") +
+    `<span class="tab-ink" aria-hidden="true"></span>`;
+  const ink = $(".tab-ink", el.tabs);
+  const moveInk = () => {
+    const a = $(".tab.active", el.tabs);
+    if (a) { ink.style.left = a.offsetLeft + "px"; ink.style.width = a.offsetWidth + "px"; }
+  };
+  addEventListener("resize", moveInk);
+  el.tabs.addEventListener("click", (e) => { const b = e.target.closest(".tab"); if (b) setCategory(b.dataset.cat); });
 
-  // 縮圖：用 assets/products/thumb/ 裡的小圖（最長邊 200px），開場結束後一次載入
+  // Filmstrip
+  // 縮圖：用 assets/products/thumb/ 裡的小圖（最長邊 200px），網頁載入完後一次載入
   // 換產品圖時記得也要更新小圖（README 有說明）
   const thumbOf = (src) => src.replace("assets/products/", "assets/products/thumb/");
-  thumbsEl.innerHTML = PRODUCTS.map(
-    (p, i) => `<button class="thumb" data-i="${i}" aria-label="${p.name}"><img data-src="${thumbOf(p.img)}" alt="" decoding="async" /></button>`
+  el.film.innerHTML = ALL.map((p) =>
+    `<button class="film" data-i="${p.i}"><div class="film-img"><img data-src="${thumbOf(p.img)}" alt="" decoding="async" /></div><span>${p.name}</span></button>`
   ).join("");
-  const thumbBtns = $$(".thumb", thumbsEl);
-  introDone.then(() => $$("img[data-src]", thumbsEl).forEach((im) => (im.src = im.dataset.src)));
-  thumbsEl.addEventListener("click", (e) => {
-    const t = e.target.closest(".thumb");
-    if (!t) return;
-    const k = list.findIndex((p) => p.i === +t.dataset.i);
+  const films = $$(".film", el.film);
+  introDone.then(() => $$("img[data-src]", el.film).forEach((im) => (im.src = im.dataset.src)));
+  el.film.addEventListener("click", (e) => {
+    const f = e.target.closest(".film"); if (!f) return;
+    const k = list.findIndex((p) => p.i === +f.dataset.i);
     if (k >= 0) go(k, k > cur ? 1 : -1);
   });
 
-  function applyFilter(cat, scroll) {
-    $$(".chip", filtersEl).forEach((c) => c.classList.toggle("active", c.dataset.cat === cat));
-    list = PRODUCTS.map((p, i) => ({ ...p, i })).filter((p) => cat === "All" || groupOf(p) === cat);
-    thumbBtns.forEach((t) => t.classList.toggle("hidden", !list.some((p) => p.i === +t.dataset.i)));
-    cur = -1;
-    busy = false;
-    card.classList.remove("leaving", "entering");
+  function setCategory(cat, scroll) {
+    activeCat = cat;
+    $$(".tab", el.tabs).forEach((t) => t.classList.toggle("active", t.dataset.cat === cat));
+    const tab = $(".tab.active", el.tabs);
+    tab && el.tabs.scrollTo({ left: tab.offsetLeft - 20, behavior: "smooth" });
+    moveInk();
+    list = (cat === "ALL" || cat === "All") ? ALL : ALL.filter((p) => groupOf(p) === cat);
+    films.forEach((f) => f.classList.toggle("hidden", !list.some((p) => p.i === +f.dataset.i)));
+    busy = false; cur = -1;
+    stage.classList.remove("is-in", "is-out");
     go(0, 1, true);
-    if (scroll) $("#products").scrollIntoView({ behavior: "smooth" });
+    if (scroll) $("#products").scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
   }
 
-  // 標題「解碼」文字特效
-  function decode(el, text) {
-    if (reduceMotion) { el.textContent = text; return; }
-    const chars = "!<>-_\\/[]{}=+*^?#01ABCDEF";
-    let frame = 0;
-    const total = 22;
-    const run = () => {
-      const reveal = Math.floor((frame / total) * text.length);
-      el.textContent = text
-        .split("")
-        .map((ch, i) => (i < reveal || ch === " " ? ch : chars[(Math.random() * chars.length) | 0]))
-        .join("");
-      if (++frame <= total) el._decode = setTimeout(run, 28);
-      else el.textContent = text;
-    };
-    clearTimeout(el._decode);
-    run();
-  }
-
-  function render(dir) {
+  function paint(dir) {
     const p = list[cur];
-    card.style.setProperty("--dir", dir);
-    card.style.setProperty("--flash-x", dir > 0 ? "80%" : "20%");
-    pImg.src = p.img;
-    pImg.alt = p.name;
+    stage.style.setProperty("--dir", dir);
+    el.img.src = p.img; el.img.alt = p.name;
     // 預先載入下一個產品的大圖（只載一張），換頁時不會閃
     if (list.length > 1) { const nx = new Image(); nx.decoding = "async"; nx.src = list[(cur + 1) % list.length].img; }
-    pCat.textContent = p.cat;
-    pDesc.textContent = p.desc;
-    decode(pName, p.name);
-    pIdx.textContent = String(cur + 1).padStart(2, "0");
-    pTotal.textContent = String(list.length).padStart(2, "0");
-
-    thumbBtns.forEach((t) => t.classList.toggle("active", +t.dataset.i === p.i));
-    const active = thumbBtns[p.i];
-    // 只捲動縮圖列本身，不影響整頁
-    thumbsEl.scrollTo({ left: active.offsetLeft - thumbsEl.clientWidth / 2 + active.clientWidth / 2, behavior: "smooth" });
+    el.name.textContent = p.name;
+    el.cat.textContent = p.cat.toUpperCase();   // 跟 GM 一樣用簡稱
+    el.specs.innerHTML = p.specs.map((s) => `<li>${s}</li>`).join("");
+    el.desc.textContent = p.desc;
+    el.idx.textContent = pad(cur + 1);
+    el.total.textContent = pad(list.length);
+    films.forEach((f) => f.classList.toggle("active", +f.dataset.i === p.i));
+    const af = films[p.i];
+    el.film.scrollTo({ left: af.offsetLeft - el.film.clientWidth / 2 + af.clientWidth / 2, behavior: "smooth" });
   }
 
-  function go(next, dir = 1, instant = false) {
+  let swapId = 0;   // 每次換頁的編號：避免上一次的計時器提早收掉這一次的動畫
+  function go(n, dir = 1, instant = false) {
     if (busy || !list.length) return;
-    next = (next + list.length) % list.length;
-    if (next === cur) return;
+    n = (n + list.length) % list.length;
+    if (n === cur) return;
     busy = true;
-    card.style.setProperty("--dir", dir);
+    stage.style.setProperty("--dir", dir);
     const swap = () => {
-      cur = next;
-      card.classList.remove("leaving");
-      render(dir);
-      void card.offsetWidth; // restart animation
-      card.classList.add("entering");
-      setTimeout(() => { card.classList.remove("entering"); busy = false; }, 820);
-      restartAutoplay();
+      const id = ++swapId;
+      cur = n;
+      stage.classList.remove("is-out");
+      paint(dir);
+      void stage.offsetWidth;
+      stage.classList.add("is-in");
+      setTimeout(() => (busy = false), 450);                 // 新產品出現後就能再按（連續點也不會沒反應）
+      setTimeout(() => { if (id === swapId) stage.classList.remove("is-in"); }, 950);
+      autoplay();
     };
-    if (instant || reduceMotion) { swap(); return; }
-    card.classList.remove("entering");
-    card.classList.add("leaving");
-    setTimeout(swap, 360);
+    if (instant || reduce) return swap();
+    stage.classList.remove("is-in");
+    stage.classList.add("is-out");
+    setTimeout(swap, 420);
   }
-
   const next = () => go(cur + 1, 1);
   const prev = () => go(cur - 1, -1);
   $("#nextBtn").addEventListener("click", next);
   $("#prevBtn").addEventListener("click", prev);
 
-  // 自動播放 + 進度條
-  // 開場動畫結束前不自動換產品（換頁特效很吃效能，會讓開場影片卡頓）
-  let introFinished = false;
-  introDone.then(() => { introFinished = true; restartAutoplay(); });
-
-  function restartAutoplay() {
-    clearTimeout(timer);
-    barAnim?.cancel();
-    if (!introFinished || list.length < 2) return;
-    barAnim = bar.animate([{ width: "0%" }, { width: "100%" }], { duration: AUTOPLAY_MS, easing: "linear", fill: "forwards" });
+  // Autoplay（只在產品區在畫面內時播放）
+  let inView = false;
+  function autoplay() {
+    clearTimeout(timer); anim?.cancel();
+    if (list.length < 2) return;
+    anim = el.time.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], { duration: AUTOPLAY_MS, easing: "linear", fill: "forwards" });
     timer = setTimeout(next, AUTOPLAY_MS);
+    if (!inView || hovering) pause();
   }
-  const pause = () => { clearTimeout(timer); barAnim?.pause(); };
+  const pause = () => { clearTimeout(timer); anim?.pause(); };
   const resume = () => {
-    if (!introFinished) return;
-    if (!barAnim || list.length < 2) return;
-    barAnim.play();
-    const remain = AUTOPLAY_MS - (barAnim.currentTime || 0);
+    if (!anim || list.length < 2 || !inView || hovering || document.hidden) return;
+    anim.play();
     clearTimeout(timer);
-    timer = setTimeout(next, Math.max(remain, 0));
+    timer = setTimeout(next, Math.max(AUTOPLAY_MS - (anim.currentTime || 0), 0));
   };
-  card.addEventListener("mouseenter", pause);
-  card.addEventListener("mouseleave", resume);
+  let hovering = false;
+  stage.addEventListener("mouseenter", () => { hovering = true; pause(); });
+  stage.addEventListener("mouseleave", () => { hovering = false; resume(); });
   document.addEventListener("visibilitychange", () => (document.hidden ? pause() : resume()));
+  new IntersectionObserver(([e]) => { inView = e.isIntersecting; inView ? resume() : pause(); }, { threshold: 0.3 }).observe(stage);
 
-  // 鍵盤左右鍵
+  // Keyboard
   addEventListener("keydown", (e) => {
-    const r = $("#products").getBoundingClientRect();
-    if (r.bottom < 0 || r.top > innerHeight) return;
+    if (!inView) return;
     if (e.key === "ArrowRight") next();
     if (e.key === "ArrowLeft") prev();
   });
 
-  // 手機滑動
+  // Swipe
   let sx = 0, sy = 0;
-  card.addEventListener("touchstart", (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; pause(); }, { passive: true });
-  card.addEventListener("touchend", (e) => {
+  stage.addEventListener("touchstart", (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  stage.addEventListener("touchend", (e) => {
     const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
-    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) (dx < 0 ? next : prev)();
-    else resume();
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) (dx < 0 ? next : prev)();
   });
 
-  // 滑鼠 3D 傾斜
-  if (!reduceMotion && matchMedia("(hover: hover)").matches) {
-    card.addEventListener("mousemove", (e) => {
-      const r = card.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5;
-      const y = (e.clientY - r.top) / r.height - 0.5;
-      card.style.transform = `rotateY(${x * 6}deg) rotateX(${-y * 6}deg)`;
+  // Product parallax on hover
+  const wrap = $(".stage-img-wrap");
+  const visual = $(".stage-visual");
+  if (!reduce && matchMedia("(hover: hover)").matches) {
+    visual.addEventListener("mousemove", (e) => {
+      const r = visual.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+      wrap.style.transform = `rotateY(${x * 14}deg) rotateX(${-y * 10}deg) translateZ(20px)`;
     });
-    card.addEventListener("mouseleave", () => (card.style.transform = ""));
+    visual.addEventListener("mouseleave", () => (wrap.style.transform = ""));
   }
 
-  cur = -1;
-  go(0, 1, true);
+  /* =========================================================
+     攤位圖：點擊放大檢視（再點圖片可切換原尺寸，方便看細節）
+     ========================================================= */
+  const lightbox = $("#lightbox"), lbScroll = $("#lightboxScroll");
+  let lastFocus = null;
+  const openMap = () => {
+    lastFocus = document.activeElement;
+    lightbox.hidden = false;
+    document.body.classList.add("lightbox-on");
+    void lightbox.offsetWidth;          // 強制重新排版，讓淡入動畫生效
+    lightbox.classList.add("open");
+    $("#lightboxClose").focus({ preventScroll: true });
+  };
+  const closeMap = () => {
+    lightbox.classList.remove("open", "zoomed");
+    document.body.classList.remove("lightbox-on");
+    setTimeout(() => (lightbox.hidden = true), 350);
+    if (lastFocus && lastFocus !== document.body) lastFocus.focus({ preventScroll: true });
+  };
+  $("#mapOpen").addEventListener("click", openMap);
+  $("#mapFab").addEventListener("click", openMap);   // 右側懸浮按鈕
+  $("#lightboxClose").addEventListener("click", closeMap);
+  lightbox.addEventListener("click", (e) => { if (e.target === lightbox || e.target === lbScroll) closeMap(); });
+  $("#lightboxImg").addEventListener("click", (e) => {
+    const r = e.target.getBoundingClientRect();   // 先記下點擊位置（放大前）
+    const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+    const zoomed = lightbox.classList.toggle("zoomed");
+    if (zoomed) {   // 以點擊位置為中心放大
+      void lbScroll.offsetWidth;
+      lbScroll.scrollLeft = fx * lbScroll.scrollWidth - lbScroll.clientWidth / 2;
+      lbScroll.scrollTop = fy * lbScroll.scrollHeight - lbScroll.clientHeight / 2;
+    }
+  });
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && !lightbox.hidden) closeMap(); });
+
+  // 一打開網頁：攤位圖以懸浮視窗彈出（不想看可按 ✕、Esc 或點旁邊關閉）
+  setTimeout(openMap, 600);
+
+  // Init
+  setCategory("ALL");
+  requestAnimationFrame(moveInk);
+  document.fonts?.ready.then(moveInk);
 })();
