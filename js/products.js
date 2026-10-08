@@ -2,12 +2,7 @@
 // 要新增 / 修改產品，只要改這個陣列即可。
 // cat 用於分類篩選與攤位圖連動。
 const PRODUCTS = [
-  {
-    name: "Mobile Demo Kit with Dual Modem",
-    cat: "ZCU",
-    img: "assets/products/p01.png?v=20261007q",
-    desc: "Portable dual modem and ZCU demo kit for ASIL-C/D redundant control, smart power distribution, secure networking, FOTA, and multistream data transmission via dual NAD.",
-  },
+  // TCU
   {
     name: "TCU with Shark Fin Antenna",
     cat: "TCU",
@@ -56,6 +51,30 @@ const PRODUCTS = [
     img: "assets/products/p09.png?v=20261007q",
     desc: "Compact and rugged TCU for 2-wheeler applications, supporting 4G LTE or 5G NR, GNSS, Ethernet, passive cooling, and IP69 protection.",
   },
+
+  // HPC
+  {
+    name: "High-Performance Computing Platform (IVI + ADAS)",
+    cat: "HPC",
+    img: "assets/products/p12.png?v=20261007q",
+    desc: "Combining IVI and ADAS with wireless Android Auto, Apple CarPlay, Wi-Fi, Bluetooth, radio tuner, and GNSS, while integrating cluster, BCM, security gateway, liquid cooling design, ASIL B/D and GSR V2 compliance.",
+  },
+
+  // ZCU
+  {
+    name: "Mobile Demo Kit with Dual Modem",
+    cat: "ZCU",
+    img: "assets/products/p01.png?v=20261007q",
+    desc: "Portable dual modem and ZCU demo kit for ASIL-C/D redundant control, smart power distribution, secure networking, FOTA, and multistream data transmission via dual NAD.",
+  },
+  {
+    name: "Premium I/O Aggregator (ZCU)",
+    cat: "ZCU",
+    img: "assets/products/p15.png?v=20261007q",
+    desc: "Premium ZCU for regional I/O aggregation and power distribution, supporting Ethernet-to-HPC, CAN FD, LIN, 10Base-T1S with RCP, and ASIL B.",
+  },
+
+  // IVI
   {
     name: '15" Tandem OLED Display',
     cat: "IVI",
@@ -68,29 +87,21 @@ const PRODUCTS = [
     img: "assets/products/p11.png?v=20261007q",
     desc: "29.5-inch dual-layer OLED architecture, 5040 x 216 resolution, 1000 nit, 100% NTSC and wide viewing angle (Contrast > 1000 at 80°).",
   },
-  {
-    name: "High-Performance Computing Platform (IVI + ADAS)",
-    cat: "HPC",
-    img: "assets/products/p12.png?v=20261007q",
-    desc: "Combining IVI and ADAS with wireless Android Auto, Apple CarPlay, Wi-Fi, Bluetooth, radio tuner, and GNSS, while integrating cluster, BCM, security gateway, liquid cooling design, ASIL B/D and GSR V2 compliance.",
-  },
-  {
-    name: "Active Damping Control Module",
-    cat: "Chassis",
-    img: "assets/products/p13.png?v=20261007q",
-    desc: "Compact active damping ECU with NXP S32K324, AUTOSAR 4.3, CAN, and PSI5 support for responsive chassis-control applications.",
-  },
+
+  // ADAS
   {
     name: "Eagleye Smart Camera",
     cat: "ADAS",
     img: "assets/products/p14.png?v=20261007q",
     desc: "8.3MP smart camera for vision-only Level 2 ADAS, GSR V2/NCAP, ASIL B, and HDR imaging.",
   },
+
+  // Others
   {
-    name: "Premium I/O Aggregator (ZCU)",
-    cat: "ZCU",
-    img: "assets/products/p15.png?v=20261007q",
-    desc: "Premium ZCU for regional I/O aggregation and power distribution, supporting Ethernet-to-HPC, CAN FD, LIN, 10Base-T1S with RCP, and ASIL B.",
+    name: "Active Damping Control Module",
+    cat: "Chassis",
+    img: "assets/products/p13.png?v=20261007q",
+    desc: "Compact active damping ECU with NXP S32K324, AUTOSAR 4.3, CAN, and PSI5 support for responsive chassis-control applications.",
   },
   {
     name: "Cyber Security Gateway Module",
