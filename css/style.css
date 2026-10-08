@@ -158,7 +158,7 @@ main { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
   font-size: clamp(1rem, 2.2vw, 1.5rem); height: calc(clamp(1.6rem, 5vw, 2.6rem) * 1.6);   /* = 數字的字高 × 行高 1.6 */
 }
 .award-icon { width: 1.2em; height: 1.2em; flex: none; fill: none; stroke: var(--cyan); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 8px rgba(56, 214, 255, 0.6)); }
-.award-logo { height: clamp(26px, 3.4vw, 40px); width: auto; display: block; }
+.award-logo { width: 100%; max-width: 280px; height: auto; display: block; filter: drop-shadow(0 0 10px rgba(56, 214, 255, 0.45)); }   /* 依卡片寬度放大，加一點光暈跟數字一致 */
 
 /* ---------- Filters ---------- */
 .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 18px; scrollbar-width: none; }
